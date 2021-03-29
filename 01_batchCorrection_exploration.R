@@ -160,7 +160,29 @@ i = 13 #KIRP
   data.source <- c(idat.dir, sample.annotation)
   result <- rnb.run.import(data.source=data.source,data.type="infinium.idat.dir", dir.reports=report.dir)
 
+
+#   485577 probes
+#        of which: 482421 CpG, 3091 CpH, and 65 rs
+#Region types:
+#          138358 regions of type tiling
+#           31033 regions of type genes
+#           31195 regions of type promoters
+#           26662 regions of type cpgislands
 filt0 <- rnb.execute.na.removal(result$rnb.set, 0)$dataset
 filt1 <- rnb.execute.na.removal(result$rnb.set, 1)$dataset
 ###
-identical(meth(rnb.set.example), meth(rnb.set.filtered)) # TRUE
+mf0 <- meth(filt0)
+mf1 <- meth(filt1)
+saveRDS(mf0,"mf0.rds")
+saveRDS(mf1,"mf1.rds")
+
+
+# norm
+  rnb.set.norm <- rnb.execute.normalization(result$rnb.set, method="swan",bgcorr.method="methylumi.noob")
+  save.rnb.set(rnb.set.norm,
+               path=paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/rnb.set.norm_withNormal.RData",sep=""))
+
+  meth.norm<-meth(rnb.set.norm,row.names=T)
+
+# meth batch correction
+
