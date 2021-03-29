@@ -160,4 +160,7 @@ i = 13 #KIRP
   data.source <- c(idat.dir, sample.annotation)
   result <- rnb.run.import(data.source=data.source,data.type="infinium.idat.dir", dir.reports=report.dir)
 
-
+filt0 <- rnb.execute.na.removal(result$rnb.set, 0)$dataset
+filt1 <- rnb.execute.na.removal(result$rnb.set, 1)$dataset
+###
+identical(meth(rnb.set.example), meth(rnb.set.filtered)) # TRUE
