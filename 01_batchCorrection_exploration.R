@@ -1,3 +1,13 @@
+# Check NAs in callrates
+
+
+
+# Check callRate pval
+result
+
+
+
+
 # explore batch correction for 3 tumor types: BRCA, KIRP and 
 
 #
@@ -175,6 +185,8 @@ mf0 <- meth(filt0)
 mf1 <- meth(filt1)
 saveRDS(mf0,"mf0.rds")
 saveRDS(mf1,"mf1.rds")
+
+x = apply(mf0, 2, function(x) sum(is.na(x)) )
 
 
 # norm
