@@ -3,9 +3,9 @@
 
 
 # Check callRate pval
-result
-
-
+ pvals <- dpval(result$rnb.set, row.names=TRUE)
+x1=apply(pvals,2,is.na)
+colSums(x1)
 
 
 # explore batch correction for 3 tumor types: BRCA, KIRP and 
