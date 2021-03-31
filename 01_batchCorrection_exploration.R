@@ -219,15 +219,15 @@ install.packages(pkgs=pkgFile, type="source", repos=NULL)
 
 # Delete package tarball
 unlink(pkgFile)
-          
-bmat2 <- as.big.matrix(mat2,backingfile="testMyBig.bck",
- descriptorfile="testMyBig.dsc",  backingpath = getwd())
+
+library(bigpca)
+
+beta<-meth(rnb.set.norm)
+bmat2 <- as.big.matrix(beta)
 ## calculate PCA ##
-# }
-# NOT RUN {
- result2 <- big.PCA(bmat2,thin=FALSE)
+result2 <- big.PCA(bmat2,thin=FALSE)
 corrected <- PC.correct(result2,bmat2)
-corrected2 <- PC.correct(result2,bmat2,n.cores=2)
+corrected2 <- PC.correct(result2,bmat2,n.cores=20)
 
           
           
