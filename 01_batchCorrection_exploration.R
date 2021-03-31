@@ -202,7 +202,15 @@ x = apply(mf0, 2, function(x) sum(is.na(x)) )
   meth.norm<-meth(rnb.set.norm,row.names=T)
 
 # meth batch correction
-
+          
+bmat2 <- as.big.matrix(mat2,backingfile="testMyBig.bck",
+ descriptorfile="testMyBig.dsc",  backingpath = getwd())
+## calculate PCA ##
+# }
+# NOT RUN {
+ result2 <- big.PCA(bmat2,thin=FALSE)
+corrected <- PC.correct(result2,bmat2)
+corrected2 <- PC.correct(result2,bmat2,n.cores=2)
 
           
           
@@ -228,3 +236,6 @@ dmc <- rnb.execute.computeDiffMeth(rnb.set.norm,pheno.cols=c("Tumor"))
  comparison <- get.comparisons(dmc)[1]
   dmc_table <-get.table(dmc, comparison, "sites", return.data.frame=TRUE)
   dmp_table <-get.table(dmc, comparison, "promoters", return.data.frame=TRUE)
+
+          
+          
