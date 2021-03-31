@@ -203,6 +203,23 @@ x = apply(mf0, 2, function(x) sum(is.na(x)) )
 
 # meth batch correction
           
+# Download package tarball from CRAN archive
+
+url <- "https://cran.r-project.org/src/contrib/Archive/bigpca/bigpca_1.0.3.tar.gz"
+pkgFile <- "bigpca_1.0.3.tar.gz"
+download.file(url = url, destfile = pkgFile)
+
+ERROR: dependencies ‘reader’, ‘NCmisc’, ‘bigmemory’, ‘biganalytics’, ‘bigmemory.sri’, ‘irlba’ are not available for package ‘bigpca’
+install.packages(c("reader", "NCmisc", "bigmemory"))
+install.packages(c("biganalytics", "bigmemory.sri", "irlba"))
+
+          
+# Install package
+install.packages(pkgs=pkgFile, type="source", repos=NULL)
+
+# Delete package tarball
+unlink(pkgFile)
+          
 bmat2 <- as.big.matrix(mat2,backingfile="testMyBig.bck",
  descriptorfile="testMyBig.dsc",  backingpath = getwd())
 ## calculate PCA ##
