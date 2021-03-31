@@ -1,27 +1,13 @@
-# projects to consider
-tumors_considered <- c("BLCA","BRCA","CHOL","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PAAD","PRAD","THCA","UCEC")
-
-
-# Check NAs in callrates
-
-
-
-# Check callRate pval
- pvals <- dpval(result$rnb.set, row.names=TRUE)
-x1=apply(pvals,2,is.na)
-x2=colSums(x1)
 
 
 # explore batch correction for 3 tumor types: BRCA, KIRP and 
 
-#
-system("mkdir /root/TCGA/ex3")
-system("mkdir /root/TCGA/ex3/Rnbeads")
 setwd("/root/TCGA/ex3/Rnbeads")
 suppressMessages(library(RnBeads))
 options(bitmapType="cairo")
 options(scipen=999)
 suppressMessages(library(IlluminaHumanMethylation450kmanifest))
+rnb.options(differential.site.test.method="refFreeEWAS")
 
 ## preprocessing
 #idat files
@@ -33,7 +19,7 @@ link.list <- read.table("/root/TCGA/tcgaBiolink/idat_filename_case.txt",header=T
 # remove double associated methylation profiles
 link.list <- link.list[grep(",",link.list$cases,invert=TRUE),]
 # get project names
-projects <- sort(unique(gsub("TCGA\\-","",link.list$project,perl=TRUE)))
+projects <- c("BLCA","BRCA","CHOL","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PAAD","PRAD","THCA","UCEC")
 # Make sure it matches the panCan data
 panCan.dir <- list.dirs(path = "/root/TCGA/panCancer_2018", full.names = TRUE, recursive = FALSE)
 for(i in 1:length(projects)){  if(grep(tolower(projects[i]),panCan.dir) > 0){print(paste(projects[i],": OK"))}  }
@@ -42,9 +28,8 @@ for(i in 1:length(projects)){  if(grep(tolower(projects[i]),panCan.dir) > 0){pri
 master.gene.list <- read.table(pipe("cat /root/TCGA/panCancer_2018/*/data_mutations_mskcc.txt|tail -n +2|cut -f1|sort|uniq"),sep="\n")
 master.gene.list <- as.character(master.gene.list[,1])
 ##############################
-
-i = 13 #KIRP
-
+#### Project-based processing ####
+for(i in 1:length(projects)){
   #project specific link.list
   print(paste("Parsing",projects[i],"Files"))
   
@@ -199,15 +184,15 @@ i = 13 #KIRP
 
   # write rnb.set.norm
   save.rnb.set(rnb.set.norm,
-               path=paste("/root/TCGA/Rnbeads/",projects[i],"/","RnBeads_normalization/rnb.set.norm_withNormal.RData",sep=""))
+               path=paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/rnb.set.norm_withNormal.RData",sep=""))
 
   # write beta
   meth.norm<-meth(rnb.set.norm,row.names=T)
-  saveRDS(meth.norm, paste(projects[i],"/","RnBeads_normalization/betaVALUES_withNormal.rds",sep=""))
+  saveRDS(meth.norm, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/betaVALUES_withNormal.rds",sep=""))
 
   # write mval
   mval.norm <- mval(rnb.set.norm,row.names=T)
-  saveRDS(mval.norm, paste(projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
+  saveRDS(mval.norm, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
 
   #### CPACOR
   # extract control probe intensities(exluding negative control probes)
@@ -228,7 +213,7 @@ i = 13 #KIRP
   ctrlprobes.scores = pca$x
   colnames(ctrlprobes.scores) = paste(colnames(ctrlprobes.scores), '_cp', sep='')
   phe=as.data.frame(ctrlprobes.scores)
-  saveRDS(phe, paste(projects[i],"/","RnBeads_normalization/PC30_controProbeIntensity.rds",sep=""))
+  saveRDS(phe, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC30_controProbeIntensity.rds",sep=""))
          
   lfla=as.formula('beta[i, ] ~  phe$PC1_cp + phe$PC2_cp + 
     phe$PC3_cp + phe$PC4_cp + phe$PC5_cp + phe$PC6_cp + phe$PC7_cp + 
@@ -259,8 +244,28 @@ i = 13 #KIRP
   pca <- prcomp(t(na.omit(res)))
   dim(pca$x)
   pca.scores = pca$x[,1:30]
-  saveRDS(meth.norm, paste(projects[i],"/","RnBeads_normalization/PC5_resultingResiduals.rds",sep=""))
+  saveRDS(pca.scores, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC5_resultingResiduals.rds",sep=""))
 
+  # add PCs
+  rnb.set.norm@pheno <- data.frame(rnb.set.norm@pheno, phe[,1:30], pca.scores[,1:5])
+	
+  # Select Covariates
+  rnb.options("covariate.adjustment.columns"=c("PC1_cp", "PC2_cp", "PC3_cp", "PC4_cp", "PC5_cp", "PC6_cp", "PC7_cp",
+                                             "PC8_cp", "PC9_cp", "PC10_cp", "PC11_cp", "PC12_cp", "PC13_cp", "PC14_cp",
+                                             "PC15_cp", "PC16_cp", "PC17_cp", "PC18_cp", "PC19_cp", "PC20_cp", "PC21_cp",
+                                             "PC22_cp", "PC23_cp", "PC24_cp", "PC25_cp", "PC26_cp", "PC27_cp", "PC28_cp",
+                                             "PC29_cp", "PC30_cp", "PC1", "PC2", "PC3", "PC4", "PC5", "Gender", "Race", "Age" ))
+
+  # Run differential meth analysis
+  dmc <- rnb.execute.computeDiffMeth(rnb.set.norm,pheno.cols=c("Tumor"))
+  # extract the vals        
+  comparison <- get.comparisons(dmc)[1]
+  dmc_table <-get.table(dmc, comparison, "sites", return.data.frame=TRUE)
+  dmp_table <-get.table(dmc, comparison, "promoters", return.data.frame=TRUE)
+
+  write.table(comparison,paste0("/root/TCGA/ex3/Rnbeads/",projects[i],"_comparison.txt"))
+  write.csv(dmc_table,paste0("/root/TCGA/ex3/Rnbeads/",projects[i],"_dmc_table.csv"))
+  write.csv(dmp_table,paste0("/root/TCGA/ex3/Rnbeads/",projects[i],"_dmp_table.csv"))
 
 
 ########################################################################################################################
@@ -349,27 +354,6 @@ pca.scores = pca$x[,1:30]
           
           
           
-# Download package tarball from CRAN archive
-
-url <- "https://cran.r-project.org/src/contrib/Archive/bigpca/bigpca_1.0.3.tar.gz"
-pkgFile <- "bigpca_1.0.3.tar.gz"
-download.file(url = url, destfile = pkgFile)
-
-ERROR: dependencies ‘reader’, ‘NCmisc’, ‘bigmemory’, ‘biganalytics’, ‘bigmemory.sri’, ‘irlba’ are not available for package ‘bigpca’
-install.packages(c("reader", "NCmisc", "bigmemory"))
-install.packages(c("biganalytics", "bigmemory.sri", "irlba"))
-
-          
-# Install package
-install.packages(pkgs=pkgFile, type="source", repos=NULL)
-
-# Delete package tarball
-unlink(pkgFile)
-
-library(bigpca)
-
-beta<-meth(rnb.set.norm)
-bmat2 <- as.big.matrix(beta)
 ## calculate PCA ##
 result2 <- big.PCA(bmat2,thin=FALSE)
 corrected <- PC.correct(result2,bmat2)
@@ -399,10 +383,19 @@ age <- c( as.numeric(clinical_harmonized$AGE), rep(NA,sum(TUMOR=="NORMAL")) )
 rnb.set.norm@pheno = data.frame(rnb.set.norm@pheno, Gender = gender, Race = race, Age = age)
 
 
+	  
+rnb.set.norm@pheno <- data.frame(rnb.set.norm@pheno, phe[,1:30], pca.scores[,1:5])
+
 num.cores <- 20
 parallel.setup(num.cores)
 
 rnb.options(differential.site.test.method="refFreeEWAS")
+rnb.options("covariate.adjustment.columns"=c("PC1_cp", "PC2_cp", "PC3_cp", "PC4_cp", "PC5_cp", "PC6_cp", "PC7_cp",
+                                             "PC8_cp", "PC9_cp", "PC10_cp", "PC11_cp", "PC12_cp", "PC13_cp", "PC14_cp",
+                                             "PC15_cp", "PC16_cp", "PC17_cp", "PC18_cp", "PC19_cp", "PC20_cp", "PC21_cp",
+                                             "PC22_cp", "PC23_cp", "PC24_cp", "PC25_cp", "PC26_cp", "PC27_cp", "PC28_cp",
+                                             "PC29_cp", "PC30_cp", "PC1", "PC2", "PC3", "PC4", "PC5", "Gender", "Race", "Age" ))
+	  
 dmc <- rnb.execute.computeDiffMeth(rnb.set.norm,pheno.cols=c("Tumor"))
           
  comparison <- get.comparisons(dmc)[1]
