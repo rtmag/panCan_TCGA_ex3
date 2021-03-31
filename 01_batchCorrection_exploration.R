@@ -174,6 +174,29 @@ i = 13 #KIRP
   data.source <- c(idat.dir, sample.annotation)
   result <- rnb.run.import(data.source=data.source,data.type="infinium.idat.dir", dir.reports=report.dir)
 
+  # Annotate Pheno table 
+  TUMOR = as.character(mut.file.p53$Variant_Classification)
+  TUMOR[TUMOR!="NORMAL"] = "TUMOR"
+
+  #covariates annotation
+  gender <- c( as.character(clinical$GENDER), rep(NA,sum(TUMOR=="NORMAL")) ) 
+  race <- c( as.character(clinical$RACE), rep(NA,sum(TUMOR=="NORMAL")) ) 
+  age <- c( as.numeric(clinical$AGE), rep(NA,sum(TUMOR=="NORMAL")) ) 
+  result$rnb.set@pheno = data.frame(result$rnb.set@pheno, Tumor = TUMOR, Gender = gender, Race = race, Age = age)
+
+  # filter callRate on rows (methylation Probes) keeping rows with over 98% call rate
+  rnb.set.rowCallRate <- rnb.execute.na.removal(result$rnb.set, 0.02)$dataset
+
+  # filter probe detection pvalue <= 10e-16
+  pvals <- dpval(rnb.set.rowCallRate, row.names=TRUE)
+  pvals <- pvals<=10e-16
+
+  # filter samples with callrate <= 98%
+  rnb.set.sampleRMV = remove.samples( rnb.set.rowCallRate, samples(rnb.set.rowCallRate)[ (colSums(pvals)/485508)>=.98 ] )
+
+  #Normalization and background correction
+  rnb.set.norm <- rnb.execute.normalization(rnb.set.sampleRMV, method="swan",bgcorr.method="methylumi.noob")
+
 
 #   485577 probes
 #        of which: 482421 CpG, 3091 CpH, and 65 rs
