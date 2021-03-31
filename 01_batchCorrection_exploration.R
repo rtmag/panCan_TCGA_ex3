@@ -179,6 +179,7 @@ i = 13 #KIRP
 #           31195 regions of type promoters
 #           26662 regions of type cpgislands
 filt0 <- rnb.execute.na.removal(result$rnb.set, 0)$dataset
+filt05 <- rnb.execute.na.removal(result$rnb.set, 0.05)$dataset
 filt1 <- rnb.execute.na.removal(result$rnb.set, 1)$dataset
 ###
 mf0 <- meth(filt0)
@@ -198,3 +199,28 @@ x = apply(mf0, 2, function(x) sum(is.na(x)) )
 
 # meth batch correction
 
+
+          
+          
+# refFreeEWASP test
+suppressMessages(library(RnBeads))
+options(bitmapType="cairo")
+options(scipen=999)
+suppressMessages(library(IlluminaHumanMethylation450kmanifest))
+rnb.set.norm <- load.rnb.set("/root/TCGA/Rnbeads/KIRP/RnBeads_normalization/rnb.set.norm_withNormal.RData.zip")
+
+annotFile <- paste0("/root/TCGA/Rnbeads/KIRP/KIRP_TP53_mutation_info_withNormal.csv") 
+TUMOR = read.csv(annotFile,header=TRUE)
+TUMOR = as.character(TUMOR$Variant_Classification)
+TUMOR[TUMOR!="NORMAL"] = "TUMOR"
+rnb.set.norm@pheno = data.frame(rnb.set.norm@pheno, Tumor = TUMOR)
+
+num.cores <- 20
+parallel.setup(num.cores)
+
+rnb.options(differential.site.test.method="refFreeEWAS")
+dmc <- rnb.execute.computeDiffMeth(rnb.set.norm,pheno.cols=c("Tumor"))
+          
+ comparison <- get.comparisons(dmc)[1]
+  dmc_table <-get.table(dmc, comparison, "sites", return.data.frame=TRUE)
+  dmp_table <-get.table(dmc, comparison, "promoters", return.data.frame=TRUE)
