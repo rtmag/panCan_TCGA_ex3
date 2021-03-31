@@ -202,6 +202,58 @@ x = apply(mf0, 2, function(x) sum(is.na(x)) )
   meth.norm<-meth(rnb.set.norm,row.names=T)
 
 # meth batch correction
+########################################################
+########################################################
+# extract control probe intensities(exluding negative control probes)
+qc_data<-qc(rnb.set.example)
+# Remove the 614 negative control probes from the intensity
+control.annotation <- rnb.get.annotation("controls450")
+non_neg_ctr_prob <- rownames(control.annotation[control.annotation$Target!="NEGATIVE",])
+# add green intensity for non-negativeControl probes
+qc_data_ctr_noNeg <- qc_data[[1]][rownames(qc_data[[1]]) %in% non_neg_ctr_prob,]
+rownames(qc_data_ctr_noNeg) <- gsub("$","_green",rownames(qc_data_ctr_noNeg),perl=TRUE) #change name to avoid conflict
+# add red intensity for non-negativeControl probes
+qc_data_ctr_noNeg <- rbind(qc_data_ctr_noNeg,qc_data[[1]][rownames(qc_data[[2]]) %in% non_neg_ctr_prob,])
+
+#PCA of control-probe intensities
+pca <- prcomp(na.omit(qc_data_ctr_noNeg))
+ctrlprobes.scores = pca$x
+colnames(ctrlprobes.scores) = paste(colnames(ctrlprobes.scores), '_cp', sep='')
+dim(ctrlprobes.scores)
+phe=ctrlprobes.scores
+          
+lfla=as.formula('beta[i, ] ~  phe$PC1_cp + phe$PC2_cp + 
+    phe$PC3_cp + phe$PC4_cp + phe$PC5_cp + phe$PC6_cp + phe$PC7_cp + 
+    phe$PC8_cp + phe$PC9_cp + phe$PC10_cp + phe$PC11_cp + phe$PC12_cp + 
+    phe$PC13_cp + phe$PC14_cp + phe$PC15_cp + phe$PC16_cp + phe$PC17_cp + 
+    phe$PC18_cp + phe$PC19_cp + phe$PC20_cp + phe$PC21_cp + phe$PC22_cp + 
+    phe$PC23_cp + phe$PC24_cp + phe$PC25_cp + phe$PC26_cp + phe$PC27_cp + 
+    phe$PC28_cp + phe$PC29_cp + phe$PC30_cp')
+
+# regression
+samples=colnames(beta)
+nvar = nrow(beta)
+res=matrix(ncol=ncol(beta), nrow=nrow(beta))
+rownames(res)=rownames(beta)
+colnames(res)=colnames(beta)
+for(i in 1:nvar) {
+	tryCatch({fit = lm(lfla,na.action=na.exclude)}, error = function(error) {return(NA)})
+	if(!exists("fit")){
+		res[i,colnames(as.matrix(beta))] = rep(NA, length(colnames(as.matrix(beta))))
+	}else{
+		res[i,rownames(as.matrix(fit$residuals))] = fit$residuals
+       		rm(fit)
+	}		
+}
+          
+# first 30 pcs of control probes
+pca <- prcomp(t(na.omit(res)))
+pca.scores = pca$x[,1:30]
+          
+########################################################
+########################################################
+          
+          
           
 # Download package tarball from CRAN archive
 
