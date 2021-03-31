@@ -1,3 +1,7 @@
+# projects to consider
+tumors_considered <- c("BLCA","BRCA","CHOL","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PAAD","PRAD","THCA","UCEC")
+
+
 # Check NAs in callrates
 
 
