@@ -214,13 +214,15 @@ qc_data_ctr_noNeg <- qc_data[[1]][rownames(qc_data[[1]]) %in% non_neg_ctr_prob,]
 rownames(qc_data_ctr_noNeg) <- gsub("$","_green",rownames(qc_data_ctr_noNeg),perl=TRUE) #change name to avoid conflict
 # add red intensity for non-negativeControl probes
 qc_data_ctr_noNeg <- rbind(qc_data_ctr_noNeg,qc_data[[1]][rownames(qc_data[[2]]) %in% non_neg_ctr_prob,])
+# remove rows with NAs
+qc_data_ctr_noNeg <- qc_data_ctr_noNeg[complete.cases(qc_data_ctr_noNeg), ]
 
 #PCA of control-probe intensities
-pca <- prcomp(na.omit(qc_data_ctr_noNeg))
+pca <- prcomp(na.omit(t(qc_data_ctr_noNeg)))
 ctrlprobes.scores = pca$x
 colnames(ctrlprobes.scores) = paste(colnames(ctrlprobes.scores), '_cp', sep='')
 dim(ctrlprobes.scores)
-phe=ctrlprobes.scores
+phe=as.data.frame(ctrlprobes.scores)
           
 lfla=as.formula('beta[i, ] ~  phe$PC1_cp + phe$PC2_cp + 
     phe$PC3_cp + phe$PC4_cp + phe$PC5_cp + phe$PC6_cp + phe$PC7_cp + 
@@ -246,7 +248,7 @@ for(i in 1:nvar) {
 	}		
 }
           
-# first 30 pcs of control probes
+# PCA on the resulting regression residuals (excluding markers with missing data) and include PC 1 to 5 as linear predictors in the final regression model.
 pca <- prcomp(t(na.omit(res)))
 pca.scores = pca$x[,1:30]
           
@@ -295,6 +297,15 @@ TUMOR = read.csv(annotFile,header=TRUE)
 TUMOR = as.character(TUMOR$Variant_Classification)
 TUMOR[TUMOR!="NORMAL"] = "TUMOR"
 rnb.set.norm@pheno = data.frame(rnb.set.norm@pheno, Tumor = TUMOR)
+
+clinical_path <- paste0("/root/TCGA/Rnbeads/KIRP/KIRP_clinical_info.csv") 
+clinical_harmonized <- read.csv(clinical_path)
+#covariates annotation
+gender <- c( as.character(clinical_harmonized$GENDER), rep("NORMAL",sum(TUMOR=="NORMAL")) ) 
+race <- c( as.character(clinical_harmonized$RACE), rep("NORMAL",sum(TUMOR=="NORMAL")) ) 
+age <- c( as.numeric(clinical_harmonized$AGE), rep(NA,sum(TUMOR=="NORMAL")) ) 
+rnb.set.norm@pheno = data.frame(rnb.set.norm@pheno, Gender = gender, Race = race, Age = age)
+
 
 num.cores <- 20
 parallel.setup(num.cores)
