@@ -126,7 +126,7 @@ for(i in 1:5){
   write.csv(clinical,paste(projects[i],"/",projects[i],"_clinical_info.csv",sep=""),row.names=F) #writeStep
 
   ##############################
-  print(paste("Starting 450K processing of",projects[i]))
+  print(paste("Starting 450K processing of",projects[i],i))
 
   # Sample annotation creation
   master.meth.id <- c(meth.id.withMutation,meth.id.normal)
@@ -202,7 +202,7 @@ for(i in 1:5){
   saveRDS(mval.norm, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
 
   #### CPACOR
-  print(paste("Starting CPACOR of:",projects[i]))
+  print(paste("Starting CPACOR of:",projects[i],i))
   # extract control probe intensities(exluding negative control probes)
   qc_data<-qc(rnb.set.norm)
   # Remove the 614 negative control probes from the intensity
@@ -231,7 +231,7 @@ for(i in 1:5){
     phe$PC23_cp + phe$PC24_cp + phe$PC25_cp + phe$PC26_cp + phe$PC27_cp + 
     phe$PC28_cp + phe$PC29_cp + phe$PC30_cp')
 
-  print(paste("Doing CPACOR regresion of residual (with 30PCs:",projects[i]))
+  print(paste("Doing CPACOR regresion of residual (with 30PCs:",projects[i],i))
   # regression
   beta = meth.norm
   samples=colnames(beta)
@@ -249,7 +249,7 @@ for(i in 1:5){
 	}		
   }
           
-  print(paste("Doing PCA of the regressed residual (with 5PC):",projects[i]))
+  print(paste("Doing PCA of the regressed residual (with 5PC):",projects[i],i))
   # PCA on the resulting regression residuals (excluding markers with missing data) and include PC 1 to 5 as linear predictors in the final regression model.
   pca <- prcomp(t(na.omit(res)))
   dim(pca$x)
@@ -267,7 +267,7 @@ for(i in 1:5){
                                              "PC29_cp", "PC30_cp", "PC1", "PC2", "PC3", "PC4", "PC5", "Gender", "Race", "Age" ))
 
   # Run differential meth analysis
-  print(paste("Running differential methAnlysis with refFreeEWAS:",projects[i]))
+  print(paste("Running differential methAnlysis with refFreeEWAS:",projects[i],i))
   dmc <- rnb.execute.computeDiffMeth(rnb.set.norm,pheno.cols=c("Tumor"))
   # extract the vals        
   comparison <- get.comparisons(dmc)[1]
