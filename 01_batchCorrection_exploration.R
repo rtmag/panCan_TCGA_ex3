@@ -1,4 +1,6 @@
 
+# sudo /root/myPrograms/R-4.0.5/bin/R
+
 
 # explore batch correction for 3 tumor types: BRCA, KIRP and 
 
