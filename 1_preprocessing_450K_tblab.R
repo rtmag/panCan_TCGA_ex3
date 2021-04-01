@@ -1,13 +1,12 @@
 # exodus
 # idats
-scp -r -P 60057 root@172.18.149.78:/root/TCGA/tcgaBiolink/ /home/rtm/TCGA
+# scp -r -P 60057 root@172.18.149.78:/root/TCGA/tcgaBiolink/ /home/rtm/TCGA
 # harmonized data from cbioportal
-scp -r -P 60057 root@172.18.149.78:/root/TCGA/panCancer_2018 /home/rtm/TCGA
+# scp -r -P 60057 root@172.18.149.78:/root/TCGA/panCancer_2018 /home/rtm/TCGA
+# mkdir /home/rtm/TCGA/ex3
+# mkdir /home/rtm/TCGA/ex3/Rnbeads
 
-
-
-
-setwd("/root/TCGA/ex3/Rnbeads")
+setwd("/home/rtm/TCGA/ex3/Rnbeads")
 suppressMessages(library(RnBeads))
 options(bitmapType="cairo")
 options(scipen=999)
@@ -16,27 +15,27 @@ rnb.options(differential.site.test.method="refFreeEWAS")
 
 ## preprocessing
 #idat files
-idat.dir <- file.path("/root/TCGA/tcgaBiolink/")
+idat.dir <- file.path("/home/rtm/TCGA/tcgaBiolink/")
 
 #### Link list processing ####
 # master link list
-link.list <- read.table("/root/TCGA/tcgaBiolink/idat_filename_case.txt",header=T,sep="\t")
+link.list <- read.table("/home/rtm/TCGA/tcgaBiolink/idat_filename_case.txt",header=T,sep="\t")
 # remove double associated methylation profiles
 link.list <- link.list[grep(",",link.list$cases,invert=TRUE),]
 # get project names
 projects <- c("BLCA","BRCA","CHOL","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PAAD","PRAD","THCA","UCEC")
 # Make sure it matches the panCan data
-panCan.dir <- list.dirs(path = "/root/TCGA/panCancer_2018", full.names = TRUE, recursive = FALSE)
+panCan.dir <- list.dirs(path = "/home/rtm/TCGA/panCancer_2018", full.names = TRUE, recursive = FALSE)
 for(i in 1:length(projects)){  if(grep(tolower(projects[i]),panCan.dir) > 0){print(paste(projects[i],": OK"))}  }
 
 # Get all genes that can have mutations across all projects
-master.gene.list <- read.table(pipe("cat /root/TCGA/panCancer_2018/*/data_mutations_mskcc.txt|tail -n +2|cut -f1|sort|uniq"),sep="\n")
+master.gene.list <- read.table(pipe("cat /home/rtm/TCGA/panCancer_2018/*/data_mutations_mskcc.txt|tail -n +2|cut -f1|sort|uniq"),sep="\n")
 master.gene.list <- as.character(master.gene.list[,1])
 ##############################
 #### Project-based processing ####
 for(i in 1:length(projects)){
   #project specific link.list
-  print(paste("Parsing",projects[i],"Files"))
+  print(paste("Parsing",projects[i], i,"Files"))
   
   i.link.list = link.list[grep(projects[i],link.list$project),]
   
@@ -159,7 +158,7 @@ for(i in 1:length(projects)){
   parallel.setup(num.cores)
   
   #idat files
-  idat.dir <- file.path("/root/TCGA/tcgaBiolink")
+  idat.dir <- file.path("/home/rtm/TCGA/tcgaBiolink")
   data.source <- c(idat.dir, sample.annotation)
   result <- rnb.run.import(data.source=data.source,data.type="infinium.idat.dir", dir.reports=report.dir)
 
@@ -173,8 +172,8 @@ for(i in 1:length(projects)){
   age <- c( as.numeric(clinical$AGE), rep(NA,sum(TUMOR=="NORMAL")) ) 
   result$rnb.set@pheno = data.frame(result$rnb.set@pheno, Tumor = TUMOR, Gender = gender, Race = race, Age = age)
 
-  print(paste("Finished with dataHarmonization of",projects[i]))
-  print(paste("Filtering probes callRates of",projects[i]))
+  print(paste("Finished with dataHarmonization of",projects[i], i))
+  print(paste("Filtering probes callRates of",projects[i], i))
   # filter callRate on rows (methylation Probes) keeping rows with over 98% call rate
   rnb.set.rowCallRate <- rnb.execute.na.removal(result$rnb.set, 0.02)$dataset
 
@@ -185,22 +184,22 @@ for(i in 1:length(projects)){
   # filter samples with callrate <= 98%
   rnb.set.sampleRMV = remove.samples( rnb.set.rowCallRate, samples(rnb.set.rowCallRate)[ (colSums(pvals)/485508)>=.98 ] )
 
-  print(paste("Starting normalization of:",projects[i]))
+  print(paste("Starting normalization of:",projects[i], i))
   #Normalization and background correction
   rnb.set.norm <- rnb.execute.normalization(rnb.set.sampleRMV, method="swan",bgcorr.method="methylumi.noob")
 
-  print(paste("Writting normalized file:",projects[i]))
+  print(paste("Writting normalized file:",projects[i], i))
   # write rnb.set.norm
   save.rnb.set(rnb.set.norm,
-               path=paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/rnb.set.norm_withNormal.RData",sep=""))
+               path=paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/rnb.set.norm_withNormal.RData",sep=""))
 
   # write beta
   meth.norm<-meth(rnb.set.norm,row.names=T)
-  saveRDS(meth.norm, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/betaVALUES_withNormal.rds",sep=""))
+  saveRDS(meth.norm, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/betaVALUES_withNormal.rds",sep=""))
 
   # write mval
   mval.norm <- mval(rnb.set.norm,row.names=T)
-  saveRDS(mval.norm, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
+  saveRDS(mval.norm, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
 
   #### CPACOR
   print(paste("Starting CPACOR of:",projects[i]))
@@ -222,7 +221,7 @@ for(i in 1:length(projects)){
   ctrlprobes.scores = pca$x
   colnames(ctrlprobes.scores) = paste(colnames(ctrlprobes.scores), '_cp', sep='')
   phe=as.data.frame(ctrlprobes.scores)
-  saveRDS(phe, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC30_controProbeIntensity.rds",sep=""))
+  saveRDS(phe, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC30_controProbeIntensity.rds",sep=""))
          
   lfla=as.formula('beta[i, ] ~  phe$PC1_cp + phe$PC2_cp + 
     phe$PC3_cp + phe$PC4_cp + phe$PC5_cp + phe$PC6_cp + phe$PC7_cp + 
@@ -255,7 +254,7 @@ for(i in 1:length(projects)){
   pca <- prcomp(t(na.omit(res)))
   dim(pca$x)
   pca.scores = pca$x[,1:30]
-  saveRDS(pca.scores, paste("/root/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC5_resultingResiduals.rds",sep=""))
+  saveRDS(pca.scores, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC5_resultingResiduals.rds",sep=""))
 
   # add PCs
   rnb.set.norm@pheno <- data.frame(rnb.set.norm@pheno, phe[,1:30], pca.scores[,1:5])
@@ -275,9 +274,9 @@ for(i in 1:length(projects)){
   dmc_table <-get.table(dmc, comparison, "sites", return.data.frame=TRUE)
   dmp_table <-get.table(dmc, comparison, "promoters", return.data.frame=TRUE)
 
-  write.table(comparison,paste0("/root/TCGA/ex3/Rnbeads/",projects[i],"_comparison.txt"))
-  write.csv(dmc_table,paste0("/root/TCGA/ex3/Rnbeads/",projects[i],"_dmc_table.csv"))
-  write.csv(dmp_table,paste0("/root/TCGA/ex3/Rnbeads/",projects[i],"_dmp_table.csv"))
+  write.table(comparison,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"_comparison.txt"))
+  write.csv(dmc_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"_dmc_table.csv"))
+  write.csv(dmp_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"_dmp_table.csv"))
 
 }
 
