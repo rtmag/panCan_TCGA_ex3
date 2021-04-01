@@ -33,7 +33,7 @@ master.gene.list <- read.table(pipe("cat /home/rtm/TCGA/panCancer_2018/*/data_mu
 master.gene.list <- as.character(master.gene.list[,1])
 ##############################
 #### Project-based processing ####
-for(i in 1:5){
+for(i in 1:3){
   #project specific link.list
   print(paste("Parsing",projects[i], i,"Files"))
   
@@ -154,7 +154,7 @@ for(i in 1:5){
   rnb.options(identifiers.column="Sample_ID")
 
   # Multiprocess
-  num.cores <- 8
+  num.cores <- 6
   parallel.setup(num.cores)
   
   #idat files
