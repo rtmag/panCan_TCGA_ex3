@@ -154,7 +154,7 @@ for(i in 1:length(projects)){
   rnb.options(identifiers.column="Sample_ID")
 
   # Multiprocess
-  num.cores <- 20
+  num.cores <- 8
   parallel.setup(num.cores)
   
   #idat files
