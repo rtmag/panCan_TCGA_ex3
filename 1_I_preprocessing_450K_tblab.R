@@ -230,7 +230,7 @@ for(i in 1:3){
     phe$PC13_cp + phe$PC14_cp + phe$PC15_cp + phe$PC16_cp + phe$PC17_cp + 
     phe$PC18_cp + phe$PC19_cp + phe$PC20_cp + phe$PC21_cp + phe$PC22_cp + 
     phe$PC23_cp + phe$PC24_cp + phe$PC25_cp + phe$PC26_cp + phe$PC27_cp + 
-    phe$PC28_cp + phe$PC29_cp + phe$PC30_cp + rnb.set.norm@pheno$Age + rnb.set.norm@pheno$Gender + rnb.set.norm@pheno$Race')
+    phe$PC28_cp + phe$PC29_cp + phe$PC30_cp ')
 
   print(paste("Doing CPACOR regresion of residual (with 30PCs:",projects[i],i))
   # regression
