@@ -239,12 +239,12 @@ for(i in 1:3){
   res=matrix(ncol=ncol(beta), nrow=nrow(beta))
   rownames(res)=rownames(beta)
   colnames(res)=colnames(beta)
-  for(i in 1:nvar) {
+  for(i_pac in 1:nvar) {
 	tryCatch({fit = lm(lfla,na.action=na.exclude)}, error = function(error) {return(NA)})
 	if(!exists("fit")){
-		res[i,colnames(as.matrix(beta))] = rep(NA, length(colnames(as.matrix(beta))))
+		res[i_pac,colnames(as.matrix(beta))] = rep(NA, length(colnames(as.matrix(beta))))
 	}else{
-		res[i,rownames(as.matrix(fit$residuals))] = fit$residuals
+		res[i_pac,rownames(as.matrix(fit$residuals))] = fit$residuals
        		rm(fit)
 	}		
   }
