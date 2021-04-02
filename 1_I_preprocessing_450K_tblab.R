@@ -224,7 +224,7 @@ for(i in 1:3){
   phe=as.data.frame(ctrlprobes.scores)
   saveRDS(phe, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/PC30_controProbeIntensity.rds",sep=""))
          
-  lfla=as.formula('beta[i, ] ~  phe$PC1_cp + phe$PC2_cp + 
+  lfla=as.formula('beta[i_pac, ] ~  phe$PC1_cp + phe$PC2_cp + 
     phe$PC3_cp + phe$PC4_cp + phe$PC5_cp + phe$PC6_cp + phe$PC7_cp + 
     phe$PC8_cp + phe$PC9_cp + phe$PC10_cp + phe$PC11_cp + phe$PC12_cp + 
     phe$PC13_cp + phe$PC14_cp + phe$PC15_cp + phe$PC16_cp + phe$PC17_cp + 
