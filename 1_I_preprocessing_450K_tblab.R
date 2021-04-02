@@ -196,7 +196,8 @@ for(i in 1:3){
   # write beta
   meth.norm<-meth(rnb.set.norm,row.names=T)
   saveRDS(meth.norm, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/betaVALUES_withNormal.rds",sep=""))
-
+  print(paste("Samples and probes for ", i , projects[i], dim(meth.norm) ) )
+	
   # write mval
   mval.norm <- mval(rnb.set.norm,row.names=T)
   saveRDS(mval.norm, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
