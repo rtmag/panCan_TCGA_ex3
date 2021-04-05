@@ -13,6 +13,7 @@ options(bitmapType="cairo")
 options(scipen=999)
 suppressMessages(library(IlluminaHumanMethylation450kmanifest))
 rnb.options(differential.site.test.method="refFreeEWAS")
+library(TCGAbiolinks)
 
 ## preprocessing
 #idat files
@@ -168,15 +169,50 @@ for(i in 1:3){
   TUMOR[TUMOR!="NORMAL"] = "TUMOR"
 
   #covariates annotation
-  gender <- c( as.character(clinical$GENDER), rep(NA,sum(TUMOR=="NORMAL")) ) 
-  race <- c( as.character(clinical$RACE), rep(NA,sum(TUMOR=="NORMAL")) ) 
-  age <- c( as.numeric(clinical$AGE), rep(NA,sum(TUMOR=="NORMAL")) ) 
+  gender <- as.character(c( as.character(clinical$GENDER), rep(NA,sum(TUMOR=="NORMAL")) ) )
+  race <- as.character(c( as.character(clinical$RACE), rep(NA,sum(TUMOR=="NORMAL")) ) )
+  age <- as.numeric(c( as.numeric(clinical$AGE), rep(NA,sum(TUMOR=="NORMAL")) ) ) 
+	
+  # normal sample annotation
+  clinical <- GDCquery_clinic(project = paste0("TCGA-",projects[i]), type = "clinical")
+  
+  norm_samp<-rownames(rnb.set.norm@pheno)[TUMOR=="NORMAL"]
+
+  parsed_clinical = data.frame(
+      ID = clinical$bcr_patient_barcode,
+      Gender = clinical$gender,
+      Race = clinical$race,
+      Age = clinical$age_at_index )
+	
+  meth.norm.id <- data.frame( do.call( rbind, strsplit( (norm_samp), '-' ) ) )
+  meth.norm.id <- paste(meth.norm.id[,1],meth.norm.id[,2],meth.norm.id[,3],sep="-")
+
+  xx_normal_clinical_data <- parsed_clinical[ match( meth.norm.id, as.character(parsed_clinical$ID) ) ,]
+
+  age[which(TUMOR=="NORMAL")] = xx_normal_clinical_data$Age
+  gender[which(TUMOR=="NORMAL")] = as.character(xx_normal_clinical_data$Gender)
+  race[which(TUMOR=="NORMAL")] = as.character(xx_normal_clinical_data$Race)
+
+  gender = tolower(gender)
+  race = tolower(race)
+	
+  # adding annotation into rnb.set
   result$rnb.set@pheno = data.frame(result$rnb.set@pheno, Tumor = TUMOR, Gender = gender, Race = race, Age = age)
 
   print(paste("Finished with dataHarmonization of",projects[i], i))
   print(paste("Filtering probes callRates of",projects[i], i))
   # filter callRate on rows (methylation Probes) keeping rows with over 98% call rate
   rnb.set.rowCallRate <- rnb.execute.na.removal(result$rnb.set, 0.02)$dataset
+	
+  # free RAM 1
+  rm(result)
+  rm(mut.file)
+  rm(mut.file.ix)
+  rm(mut.mat)
+  rm(mut.mat.ix)
+  rm(CNA)
+  rm(parsed_clinical)
+  rm(clinical)
 
   # filter probe detection pvalue <= 10e-16
   pvals <- dpval(rnb.set.rowCallRate, row.names=TRUE)
@@ -185,9 +221,16 @@ for(i in 1:3){
   # filter samples with callrate <= 98%
   rnb.set.sampleRMV = remove.samples( rnb.set.rowCallRate, samples(rnb.set.rowCallRate)[ (colSums(pvals)/dim(pvals)[1])<.98 ] )
 
+  # free RAM 2
+  rm(rnb.set.rowCallRate)
+  rm(pvals)
+
   print(paste("Starting normalization of:",projects[i], i))
   #Normalization and background correction
   rnb.set.norm <- rnb.execute.normalization(rnb.set.sampleRMV, method="swan",bgcorr.method="methylumi.noob")
+	
+  # free ram 3
+  rm(rnb.set.sampleRMV)
 
   print(paste("Writting normalized file:",projects[i], i))
   # write rnb.set.norm
@@ -202,6 +245,9 @@ for(i in 1:3){
   # write mval
   mval.norm <- mval(rnb.set.norm,row.names=T)
   saveRDS(mval.norm, paste("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/","RnBeads_normalization/mVALUES_withNormal.rds",sep=""))
+	
+  # free ram 4
+  rm(mval.norm)
 
   #### CPACOR
   print(paste("Starting CPACOR of:",projects[i],i))
@@ -231,7 +277,7 @@ for(i in 1:3){
     phe$PC13_cp + phe$PC14_cp + phe$PC15_cp + phe$PC16_cp + phe$PC17_cp + 
     phe$PC18_cp + phe$PC19_cp + phe$PC20_cp + phe$PC21_cp + phe$PC22_cp + 
     phe$PC23_cp + phe$PC24_cp + phe$PC25_cp + phe$PC26_cp + phe$PC27_cp + 
-    phe$PC28_cp + phe$PC29_cp + phe$PC30_cp ')
+    phe$PC28_cp + phe$PC29_cp + phe$PC30_cp + + + ')
 
   print(paste("Doing CPACOR regresion of residual (with 30PCs:",projects[i],i))
   # regression
