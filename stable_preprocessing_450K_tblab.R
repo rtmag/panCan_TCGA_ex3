@@ -176,7 +176,7 @@ for(i in 1:3){
   # normal sample annotation
   clinical <- GDCquery_clinic(project = paste0("TCGA-",projects[i]), type = "clinical")
   
-  norm_samp<-rownames(rnb.set.norm@pheno)[TUMOR=="NORMAL"]
+  norm_samp<-as.character(result$rnb.set@pheno$Sample_ID[TUMOR=="NORMAL"])
 
   parsed_clinical = data.frame(
       ID = clinical$bcr_patient_barcode,
