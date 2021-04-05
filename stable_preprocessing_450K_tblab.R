@@ -322,9 +322,9 @@ for(i in 1:3){
   dmc_table <-get.table(dmc, comparison, "sites", return.data.frame=TRUE)
   dmp_table <-get.table(dmc, comparison, "promoters", return.data.frame=TRUE)
 
-  write.table(comparison,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"_comparison.txt"))
-  write.csv(dmc_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"_dmc_table.csv"))
-  write.csv(dmp_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"_dmp_table.csv"))
+  write.table(comparison,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/RnBeads_normalization/",projects[i],"_comparison.txt"))
+  write.csv(dmc_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/RnBeads_normalization/",projects[i],"_dmc_table.csv"))
+  write.csv(dmp_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/RnBeads_normalization/",projects[i],"_dmp_table.csv"))
 
 }
 
