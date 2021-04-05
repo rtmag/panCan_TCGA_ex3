@@ -225,6 +225,18 @@ for(i in 1:3){
   rm(rnb.set.rowCallRate)
   rm(pvals)
 
+  # remove samples with NAs in pheno info
+  if( !(i %in% c(10,11,13,14)) ){
+	 na_ix_samp = is.na(rnb.set.sampleRMV@pheno$Race) | is.na(rnb.set.sampleRMV@pheno$Age) | is.na(rnb.set.sampleRMV@pheno$Gender)
+ 	 rnb.set.sampleRMV = remove.samples( rnb.set.sampleRMV, samples(rnb.set.sampleRMV)[ na_ix_samp ] )
+  }
+	
+  # if LUAD or LUSC (10,11) remove samples with NA on age
+  if( i %in% c(10,11) ){
+	 na_ix_samp = is.na(rnb.set.sampleRMV@pheno$Age) | is.na(rnb.set.sampleRMV@pheno$Gender)
+ 	 rnb.set.sampleRMV = remove.samples( rnb.set.sampleRMV, samples(rnb.set.sampleRMV)[ na_ix_samp ] )
+  }  
+	
   print(paste("Starting normalization of:",projects[i], i))
   #Normalization and background correction
   rnb.set.norm <- rnb.execute.normalization(rnb.set.sampleRMV, method="swan",bgcorr.method="methylumi.noob")
@@ -279,6 +291,17 @@ for(i in 1:3){
     phe$PC23_cp + phe$PC24_cp + phe$PC25_cp + phe$PC26_cp + phe$PC27_cp + 
     phe$PC28_cp + phe$PC29_cp + phe$PC30_cp + rnb.set.norm@pheno$Age + rnb.set.norm@pheno$Gender + rnb.set.norm@pheno$Race ')
 
+    # if the cancer is LUAD, LUSC, PRAD or THCA (10,11,13,14) omit race from the linear regression
+    if( i %in% c(10,11,13,14) ){
+	  lfla=as.formula('beta[i_pac, ] ~  phe$PC1_cp + phe$PC2_cp + 
+    phe$PC3_cp + phe$PC4_cp + phe$PC5_cp + phe$PC6_cp + phe$PC7_cp + 
+    phe$PC8_cp + phe$PC9_cp + phe$PC10_cp + phe$PC11_cp + phe$PC12_cp + 
+    phe$PC13_cp + phe$PC14_cp + phe$PC15_cp + phe$PC16_cp + phe$PC17_cp + 
+    phe$PC18_cp + phe$PC19_cp + phe$PC20_cp + phe$PC21_cp + phe$PC22_cp + 
+    phe$PC23_cp + phe$PC24_cp + phe$PC25_cp + phe$PC26_cp + phe$PC27_cp + 
+    phe$PC28_cp + phe$PC29_cp + phe$PC30_cp + rnb.set.norm@pheno$Age + rnb.set.norm@pheno$Gender ')
+   }
+
   print(paste("Doing CPACOR regresion of residual (with 30PCs:",projects[i],i))
   # regression
   beta = meth.norm
@@ -313,7 +336,15 @@ for(i in 1:3){
                                              "PC15_cp", "PC16_cp", "PC17_cp", "PC18_cp", "PC19_cp", "PC20_cp", "PC21_cp",
                                              "PC22_cp", "PC23_cp", "PC24_cp", "PC25_cp", "PC26_cp", "PC27_cp", "PC28_cp",
                                              "PC29_cp", "PC30_cp", "PC1", "PC2", "PC3", "PC4", "PC5", "Gender", "Race", "Age" ))
-
+	    
+  # if the cancer is LUAD, LUSC, PRAD or THCA (10,11,13,14) omit race from the covariates list
+  if( i %in% c(10,11,13,14) ){
+      rnb.options("covariate.adjustment.columns"=c("PC1_cp", "PC2_cp", "PC3_cp", "PC4_cp", "PC5_cp", "PC6_cp", "PC7_cp",
+                                             "PC8_cp", "PC9_cp", "PC10_cp", "PC11_cp", "PC12_cp", "PC13_cp", "PC14_cp",
+                                             "PC15_cp", "PC16_cp", "PC17_cp", "PC18_cp", "PC19_cp", "PC20_cp", "PC21_cp",
+                                             "PC22_cp", "PC23_cp", "PC24_cp", "PC25_cp", "PC26_cp", "PC27_cp", "PC28_cp",
+                                             "PC29_cp", "PC30_cp", "PC1", "PC2", "PC3", "PC4", "PC5", "Gender", "Age" ))
+  }
   # Run differential meth analysis
   print(paste("Running differential methAnlysis with refFreeEWAS:",projects[i],i))
   dmc <- rnb.execute.computeDiffMeth(rnb.set.norm,pheno.cols=c("Tumor"))
@@ -325,6 +356,11 @@ for(i in 1:3){
   write.table(comparison,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/RnBeads_normalization/",projects[i],"_comparison.txt"))
   write.csv(dmc_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/RnBeads_normalization/",projects[i],"_dmc_table.csv"))
   write.csv(dmp_table,paste0("/home/rtm/TCGA/ex3/Rnbeads/",projects[i],"/RnBeads_normalization/",projects[i],"_dmp_table.csv"))
+	
+  # free mem
+  rm(rnb.set.norm)
+  rm(res)
+  rm(dmc)
 
 }
 
