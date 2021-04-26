@@ -2,7 +2,7 @@
 # exodus
 # idats
 # scp -r -P 60057 root@172.18.149.78:/root/TCGA/tcgaBiolink/ /home/rtm/TCGA
-# harmonized data from cbioportal
+# harmonized data rna-seq; cnv; snp, clin 
 # scp -r -P 60057 root@172.18.149.78:/root/TCGA/panCancer_2018 /home/rtm/TCGA
 # mkdir /home/rtm/TCGA/ex3
 # mkdir /home/rtm/TCGA/ex3/Rnbeads
